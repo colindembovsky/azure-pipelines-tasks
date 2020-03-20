@@ -8,18 +8,21 @@ steps:
   - |
       Badly configured build; an expected parameter is missing. //
       layoutRoot: ${{ parameters.layoutRoot }}
+- script: mkdir ${{ parameters.layoutRoot }}\_signedTasks
+# TODO loop over all tasks if taskFolder is not set
 - script: echo ^<?xml version="1.0" encoding="utf-8"?^>^<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd"^>^<metadata^>^<id^>CmdLineV2^</id^>^<version^>0.0.0^</version^>^<authors^>Microsoft^</authors^>^<copyright^>© Microsoft Corporation. All rights reserved.^</copyright^>^</metadata^>^</package^> > ${{ parameters.layoutRoot }}\Tasks\Task.nuspec
 - task: ArchiveFiles@2
   inputs:
      rootFolderOrFile: '${{ parameters.layoutRoot }}\Tasks\${{ parameters.taskFolder }}'
      includeRootFolder: false
      archiveType: zip
-     archiveFile: '${{ parameters.layoutRoot }}\Tasks\${{ parameters.taskFolder }}.nupkg'
+     archiveFile: '${{ parameters.layoutRoot }}\_signedTasks\${{ parameters.taskFolder }}.nupkg'
      replaceExistingArchive: true
+# END LOOP
 - task: SFP.build-tasks.custom-build-task-1.EsrpCodeSigning@1
   inputs:
     ConnectedServiceName: AzurePipelinesTasksESRP
-    FolderPath: '${{ parameters.layoutRoot }}\Tasks'
+    FolderPath: '${{ parameters.layoutRoot }}\_signedTasks'
     Pattern: '*.nupkg'
     signConfigType: inlineSignParams
     inlineOperation: |
